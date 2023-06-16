@@ -1,7 +1,5 @@
 # Recipe_automatisation
 
-Sure, I'll adjust the README to include the additional packages in the installation section and the repository link:
-
 Flask-Based Recipe Generator Application
 This is a simple Flask web application that generates recipes based on keywords provided by the user. It uses an OpenAI model for generating the recipes and offers an option to save them as an xlsx file.
 
