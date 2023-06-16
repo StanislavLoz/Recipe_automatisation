@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Recipe Generator</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap');
+
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #12c2e9, #c471ed, #f64f59);
+            background-attachment: fixed; /* Added this line */
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            text-align: center;
+            padding: 50px 0;
+            font-size: 3em;
+            color: #fff;
+            animation: fadeIn 2s;
+        }
+
+        @keyframes fadeIn {
+            0% {opacity: 0;}
+            100% {opacity: 1;}
+        }
+
+        #content {
+            width: 80%;
+            margin: 0 auto;
+            animation: slideIn 2s;
+        }
+
+        @keyframes slideIn {
+            0% {transform: translateY(-50px); opacity: 0;}
+            100% {transform: translateY(0); opacity: 1;}
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            animation: formFadeIn 2s ease-in-out 1s forwards;
+            opacity: 0;
+        }
+
+        @keyframes formFadeIn {
+            0% {opacity: 0;}
+            100% {opacity: 1;}
+        }
+
+        label {
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        input[type="text"], input[type="file"] {
+            padding: 10px;
+            border: none;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-bottom: 2px solid #fff;
+            border-radius: 0;
+            color: #fff;
+            width: 50%;
+            margin-bottom: 15px;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, input[type="file"]:focus {
+            border-color: #fff;
+        }
+
+        input[type="submit"] {
+            margin-top: 10px;
+            padding: 10px 20px;
+            border: none;
+            background: linear-gradient(135deg, #6dd5ed, #2193b0);
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            width: 200px;
+            box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+            opacity: 0.95;
+        }
+
+        input[type="submit"]:hover {
+            transform: scale(1.05);
+            box-shadow: 0px 12px 20px rgba(0, 0, 0, 0.2);
+            opacity: 1;
+        }
+
+        #status {
+            margin: 20px 0;
+            color: #003366;
+            text-align: center;
+        }
+
+        #recipe {
+            overflow-x: auto;
+            padding: 20px;
+            border: none;
+            border-radius: 3px;
+            background-color: rgba(255,255,255,0.1);
+            color: #fff;
+            width: 70%;
+            margin: 0 auto;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.5s ease-in-out;
+            word-wrap: break-word;
+        }
+
+        #recipe .key {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        #recipe .value {
+            font-size: 1.1em;
+        }
+    </style>
+    <script>
+        $(document).ready(function() {
+            // Hide the buttons initially
+            $('#recipe').hide();
+            $('#accept-form').hide();
+            $('#regenerate-form').hide();
+            $('#save-form').hide();
+
+            $("#recipe-form").submit(function(e) {
+                e.preventDefault();
+                $('#status').text('Creating recipe...');
+                $.ajax({
+                    type: 'POST',
+                    url: '/',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        $('#recipe').html(response);
+                        $('#status').text('');
+
+                        // Show the buttons once the recipe is generated
+                        $('#recipe').show();
+                        $('#accept-form').show();
+                        $('#regenerate-form').show();
+                        $('#save-form').show();
+                    }
+                });
+            });
+
+            $("#file-form").submit(function(e) {
+                e.preventDefault();
+                var formData = new FormData(this);
+                $.ajax({
+                    type: 'POST',
+                    url: '/upload',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        console.log(response);
+                        $('#status').text('Handle received: ' + response);
+                    },
+                    error: function(error) {
+                        console.log(error);
+                    }
+                });
+            });
+
+            $("#accept-form").submit(function(e) {
+                e.preventDefault();
+                $.ajax({
+                    type: 'POST',
+                    url: '/process_next_keyword',
+                    data: {action: 'Accept'},
+                    success: function(response) {
+                        $('#message').text(response);
+                    },
+                    error: function(error) {
+                        console.log(error);
+                    }
+                });
+            });
+
+            $("#regenerate-form").submit(function(e) {
+                e.preventDefault();
+                $('#status').text('Regenerating recipe...');
+                $.ajax({
+                    type: 'POST',
+                    url: '/regenerate',
+                    success: function(response) {
+                        $('#recipe').html(response);
+                        $('#message').text('Recipe regenerated!');
+                        $('#status').text('');
+                    },
+                    error: function(error) {
+                        console.log(error);
+                        $('#status').text('An error occurred.');
+                    }
+                });
+            });
+
+            $("#save-form").submit(function(e) {
+                e.preventDefault();
+                var link = document.createElement('a');
+                link.href = '/save';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+        });
+
+        $(window).on('beforeunload', function(){
+            $.ajax({
+                url: '/clear_stored_recipes',
+                type: 'POST',
+                async: false
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Recipe Generator</h1>
+    <form id="recipe-form" action="/" method="post">
+        <label for="keywords">Enter keywords separated by comma:</label><br>
+        <input type="text" id="keywords" name="keywords"><br>
+        <input type="submit" value="Submit">
+    </form>
+    <form id="file-form" action="/upload" method="post" enctype="multipart/form-data">
+        <label for="file">Upload your CSV file:</label><br>
+        <input type="file" id="file" name="file"><br>
+        <input type="submit" value="Upload">
+    </form>
+    <div id="status"></div>
+    <div id="recipe"></div>
+    <span id="message"></span>
+    <form id="accept-form" action="/process_next_keyword" method="post">
+        <input type="hidden" name="action" value="Accept">
+        <input type="submit" value="Accept">
+    </form>
+    <form id="regenerate-form" action="/regenerate" method="post">
+        <input type="submit" value="Regenerate">
+    </form>
+    <form id="save-form" action="/save" method="post">
+        <input type="submit" value="Save">
+    </form>
+</body>
+</html>

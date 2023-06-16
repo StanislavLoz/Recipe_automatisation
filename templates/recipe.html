@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generated Recipe</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $("#accept-form").submit(function(e) {
+                e.preventDefault();
+                $.ajax({
+                    type: 'POST',
+                    url: '/process_next_keyword',
+                    data: {action: 'Accept'},
+                    success: function(response) {
+                        $('#message').text(response);
+                    },
+                    error: function(error) {
+                        console.log(error);
+                    }
+                });
+            });
+
+            $("#regenerate-form").submit(function(e) {
+                e.preventDefault();
+                $('#status').text('Creating recipe...');
+                $.ajax({
+                    type: 'POST',
+                    url: '/regenerate',
+                    success: function(response) {
+                        $('#recipe').html(response);
+                        $('#message').text('Recipe regenerated!');
+                        $('#status').text('');
+                    },
+                    error: function(error) {
+                        console.log(error);
+                        $('#status').text('An error occurred.');
+                    }
+                });
+            });
+
+            $("#save-form").submit(function(e) {
+                e.preventDefault();
+                var link = document.createElement('a');
+                link.href = '/save';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+        });
+    </script>
+    <style>
+        pre {
+            white-space: nowrap;
+            overflow-x: auto;
+        }
+
+        .key {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .value {
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Generated Recipe for "{{ keyword }}"</h1>
+    <pre id="recipe">
+        {% for key, value in metadata.items() %}
+        <span class="key">{{ key }}:</span> <span class="value">{{ value }}</span><br>
+        {% endfor %}
+    </pre>
+    <span id="message"></span>
+    <div id="status"></div>
+    <form id="accept-form" action="/process_next_keyword" method="post">
+        <input type="hidden" name="action" value="Accept">
+        <input type="submit" value="Accept">
+    </form>
+    <form id="regenerate-form" action="/regenerate" method="post">
+        <input type="submit" value="Regenerate">
+    </form>
+    <form id="save-form" action="/save" method="post">
+        <input type="submit" value="Save">
+    </form>
+</body>
+</html>
