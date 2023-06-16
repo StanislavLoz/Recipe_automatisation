@@ -12,8 +12,6 @@ Saving stored recipes to an Excel file
 Installation
 To run this application locally, you need Python and the necessary libraries installed. Here's how you can set up:
 
-bash
-Copy code
 # Clone this repository
 git clone https://github.com/StanislavLoz/Recipe_automatisation.git
 
